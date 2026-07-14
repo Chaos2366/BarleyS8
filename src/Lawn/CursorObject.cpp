@@ -27,6 +27,25 @@
 #include "../Resources.h"
 #include "../Sexy.TodLib/Reanimator.h"
 #include "widget/WidgetManager.h"
+#include "../Sexy.TodLib/TodCommon.h"
+
+namespace
+{
+    SeedType PickRandomPlant(SeedType theCurrentPlant)
+    {
+
+        constexpr int kFirstPlant = static_cast<int>(SeedType::SEED_PEASHOOTER);
+        constexpr int kEndPlant = static_cast<int>(SeedType::SEED_IMITATER);
+        static_assert(kEndPlant - kFirstPlant > 1);
+        int aRandomPlant;
+        do
+        {
+            aRandomPlant = kFirstPlant + Rand(kEndPlant - kFirstPlant);
+        }
+        while (aRandomPlant == static_cast<int>(theCurrentPlant));
+        return static_cast<SeedType>(aRandomPlant);
+    }
+}
 
 CursorObject::CursorObject()
 {
@@ -59,7 +78,11 @@ void CursorObject::Update()
         mVisible = false;
         return;
     }
-
+    if (mApp->mRandomPlants && !mBoard->mPaused && mCursorType == CursorType::CURSOR_TYPE_PLANT_FROM_BANK)
+    {
+        mType = PickRandomPlant(mType);
+        mImitaterType = SeedType::SEED_NONE;
+    }
     Reanimation* aCursorReanim = mApp->ReanimationTryToGet(mReanimCursorID);
     if (aCursorReanim)
     {

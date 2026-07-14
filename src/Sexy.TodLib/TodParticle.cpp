@@ -139,6 +139,7 @@ constinit const ParticleParams gLawnParticleArray[ParticleEffect::NUM_PARTICLES]
 	{ .mParticleEffect = ParticleEffect::PARTICLE_STARBURST, .mParticleFileName = "particles/Starburst.xml" },
 	{ .mParticleEffect = ParticleEffect::PARTICLE_CREDITS_FOG, .mParticleFileName = "particles/Credits_fog.xml" },
 	{ .mParticleEffect = ParticleEffect::PARTICLE_PERSENT_PICK_UP_ARROW, .mParticleFileName = "particles/UpsellArrow.xml" },
+    {.mParticleEffect = ParticleEffect::PARTICLE_BLIND_BOX,.mParticleFileName = "particles/ZombieTrafficCone.xml",}
 };  // 0x6A0FF0
 
 // (ecx = *theParticleFileName, *theParticleDef)  //esp -= 4

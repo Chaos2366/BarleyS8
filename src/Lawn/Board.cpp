@@ -51,6 +51,8 @@
 #include "widget/WidgetManager.h"
 #include "sound/SoundInstance.h"
 
+
+
 //#define SEXY_PERF_ENABLED
 #include "misc/PerfTimer.h"
 #include "Widget/AchievementsScreen.h"
@@ -58,9 +60,10 @@
 //#define SEXY_MEMTRACE
 //#include "../SexyAppFramework/memmgr.h"
 
-bool gShownMoreSunTutorial = false;
 
 // GOTY @Patoke: 0x40A3C0
+bool gShownMoreSunTutorial = false;
+
 Board::Board(LawnApp* theApp)
 {
 	mApp = theApp;
@@ -76,6 +79,10 @@ Board::Board(LawnApp* theApp)
 	TodHesitationTrace("board dataarrays");
 
 	mApp->mEffectSystem->EffectSystemFreeAll();
+    mSpawnTimer = 800;
+    mSpawnCount = 0;
+    mGameTimer = 0;
+    mGameStarted = false;
 	mBoardRandSeed = mApp->mAppRandSeed;
 	if (mApp->IsSurvivalMode())
 	{
@@ -261,6 +268,29 @@ Board::~Board()
 	*/
 	delete mCutScene;
 	delete mChallenge;
+}
+
+int32_t Board::GetSpawnTime(){
+    int32_t min = mGameTimer / 6000;
+    if(min < 3){
+        return 800;
+    } else if(min < 6){
+        return 700;
+    }else if(min < 9){
+        return 550;
+    }else if(min < 13){
+        return 450;
+    }else if(min < 17){
+        return 350;
+    }else if(min < 20){
+        return 280;
+    }else if(min < 23){
+        return 240;
+    }else if(min < 30){
+        return 200;
+    }else{
+        return 100;
+    }
 }
 
 void BoardInitForPlayer()
@@ -571,6 +601,7 @@ void ZombiePickerInitForWave(ZombiePicker* theZombiePicker)
 	theZombiePicker->mZombiePoints = 0;
 	memset(theZombiePicker->mZombieTypeCount, 0, sizeof(theZombiePicker->mZombieTypeCount));
 }
+
 
 void ZombiePickerInit(ZombiePicker* theZombiePicker)
 {
@@ -2850,7 +2881,7 @@ PlantingReason Board::CanPlantAt(int theGridX, int theGridY, SeedType theSeedTyp
 		aHasFlowerPot = aUnderPlant->mSeedType == SeedType::SEED_FLOWERPOT;
 	}
 	// 部分情况下的格子中不能种植植物
-	if (GetCraterAt(theGridX, theGridY))
+	if (GetCraterAt(theGridX, theGridY) && !mApp->IsSurvivalMode())
 	{
 		return PlantingReason::PLANTING_NOT_ON_CRATER;
 	}
@@ -5157,6 +5188,7 @@ void Board::ZombiesWon(Zombie* theZombie)
 {
 	if (mApp->mGameScene == GameScenes::SCENE_ZOMBIES_WON)
 		return;
+    if(mApp->IsSurvivalMode())return;
 
 	ClearAdvice(AdviceType::ADVICE_NONE);
 	mApp->mBoardResult = BoardResult::BOARDRESULT_LOST;
@@ -5343,6 +5375,21 @@ void Board::UpdateZombieSpawning()
 	if (mApp->mGameMode == GameMode::GAMEMODE_UPSELL || mApp->mGameMode == GameMode::GAMEMODE_INTRO)
 		return;
 
+    if(mApp->IsSurvivalMode()){
+        if(mGameStarted) {
+            if (mSpawnTimer > 0) {
+                mSpawnTimer--;
+                return;
+            }
+            mSpawnTimer = GetSpawnTime();
+            while (mSpawnCount < 5) {
+                AddZombieInRow(ZombieType::ZOMBIE_BLIND_BOX, mSpawnCount++, 0);
+            }
+            mSpawnCount = 0;
+        }
+
+        return;
+    }
 	if (mFinalWaveSoundCounter > 0)
 	{
 		mFinalWaveSoundCounter--;
@@ -5802,6 +5849,27 @@ void Board::UpdateGame()
 	}
 
 	UpdateProgressMeter();
+    if(mGameStarted && (mGameTimer % 1000 == 0)){
+        int aRow = 0;
+        LawnMower* aMower = nullptr;
+        int aHasMower[5] = {0,0,0,0,0};
+        while(IterateLawnMowers(aMower)){
+            if(aMower != nullptr && !aMower->mDead && aMower->mMowerState == LawnMowerState::MOWER_READY){
+                aHasMower[aMower->mRow] = 1;
+            }
+        }
+        Plant* chili;
+        while(aRow < 5){
+            if(aHasMower[aRow] == 1){
+                aRow++;
+                continue;
+            }
+            chili = NewPlant(0,aRow++,SeedType::SEED_JALAPENO);
+            chili->mDoSpecialCountdown = 0;
+            chili->DoSpecial();
+            chili->mVisible = false;
+        }
+    }
 }
 
 void Board::Update()
@@ -5813,6 +5881,9 @@ void Board::Update()
 
 	mCutScene->Update();
 	UpdateMousePosition();
+    if(mGameStarted){
+        ++mGameTimer;
+    }
 	if (mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_ZEN_GARDEN)
 	{
 		mApp->mZenGarden->ZenGardenUpdate();
@@ -7804,6 +7875,55 @@ void Board::KeyDown(KeyCode theKey)
 {
 	DoTypingCheck(theKey);
 
+    if(mHasFocus){
+        if(theKey == KEYCODE_TAB){
+            mApp->mRandomPlants = !mApp->mRandomPlants;
+            DisplayAdvice(mApp->mRandomPlants ? "Random Plants : ON" : "Random Plants : OFF",
+                          MessageStyle::MESSAGE_STYLE_HINT_TALL_FAST,
+                          AdviceType::ADVICE_NONE);
+        }
+        else if (theKey == static_cast<KeyCode>('P'))
+        {
+            mGameStarted = !mGameStarted;
+            DisplayAdvice(mGameStarted ? "游戏开始" : "游戏结束",
+                          MessageStyle::MESSAGE_STYLE_BIG_MIDDLE_FAST,
+                          ADVICE_NONE);
+            mSpawnTimer = 0;
+            mSpawnCount = 0;
+            mGameTimer = 0;
+        } else if(theKey == static_cast<KeyCode>('X'))
+        {
+            int row = 0;
+            Plant* chili;
+            while(row < 5){
+                chili = NewPlant(8,row++,SeedType::SEED_JALAPENO);
+                chili->mVisible = false;
+                chili->mDoSpecialCountdown = 0;
+                chili->DoSpecial();
+            }
+        }else if(theKey == static_cast<KeyCode>('M')){
+            bool aHasMower[5] = {false,false,false,false,false};
+            LawnMower* aMower = nullptr;
+            while(IterateLawnMowers(aMower)){
+                if(aMower == nullptr||aMower->mDead ||aMower->mRow < 0||aMower->mRow >= 5){
+                    continue;
+                }
+                if(aMower->mMowerState == LawnMowerState::MOWER_READY){
+                    aHasMower[aMower->mRow] = true;
+                }
+            }
+            LawnMower* aNewMower;
+            for(int row = 0; row < 5; row++){
+                if(aHasMower[row])continue;
+                aNewMower = mLawnMowers.DataArrayAlloc();
+                aNewMower->LawnMowerInitialize(row);
+                aNewMower->mMowerState = LawnMowerState::MOWER_ROLLING_IN;
+                aNewMower->mRollingInCounter = 0;
+            }
+        }
+    }
+
+
 	if (mApp->mGameScene == GameScenes::SCENE_LEVEL_INTRO && 
 		mApp->mGameMode != GameMode::GAMEMODE_CHALLENGE_ZEN_GARDEN && 
 		mApp->mGameMode != GameMode::GAMEMODE_TREE_OF_WISDOM)
@@ -9125,11 +9245,23 @@ int GetRectOverlap(const Rect& rect1, const Rect& rect2)
 
 bool GetCircleRectOverlap(int theCircleX, int theCircleY, int theRadius, const Rect& theRect)
 {
-	int aNearX = std::clamp(theCircleX, theRect.mX, theRect.mX + theRect.mWidth);
-	int aNearY = std::clamp(theCircleY, theRect.mY, theRect.mY + theRect.mHeight);
-	int dx = theCircleX - aNearX;
-	int dy = theCircleY - aNearY;
-	return dx * dx + dy * dy <= theRadius * theRadius;
+    const int aRectX1 = theRect.mX;
+    const int aRectX2 = theRect.mX + theRect.mWidth;
+    const int aRectY1 = theRect.mY;
+    const int aRectY2 = theRect.mY + theRect.mHeight;
+    const int aMinX = std::min(aRectX1, aRectX2);
+    const int aMaxX = std::max(aRectX1, aRectX2);
+    const int aMinY = std::min(aRectY1, aRectY2);
+    const int aMaxY = std::max(aRectY1, aRectY2);
+    const int aClosestX =std::clamp(theCircleX,aMinX,aMaxX);
+    const int aClosestY = std::clamp(theCircleY,aMinY,aMaxY);
+    const int64_t dx = static_cast<int64_t>(theCircleX) - aClosestX;
+
+    const int64_t dy = static_cast<int64_t>(theCircleY) - aClosestY;
+
+    const int64_t aRadius = theRadius;
+
+    return dx * dx + dy * dy <= aRadius * aRadius;
 }
 
 // GOTY @Patoke: 0x41F6B0

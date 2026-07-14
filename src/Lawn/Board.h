@@ -223,8 +223,12 @@ public:
 	bool							mDanceMode;
 	bool							mDaisyMode;
 	bool							mSukhbirMode;
+    bool                            mGameStarted;
 	BoardResult						mPrevBoardResult;
 	int32_t							mTriggeredLawnMowers;
+    int32_t                         mSpawnTimer;
+    int32_t                         mSpawnCount;
+    int64_t                         mGameTimer;
 	uint32_t						mPlayTimeActiveLevel;
 	uint32_t						mPlayTimeInactiveLevel;
 	int32_t							mMaxSunPlants;
@@ -258,6 +262,7 @@ public:
 	void							ClearCursor();
 	/*inline*/ bool					AreEnemyZombiesOnScreen();
 	LawnMower*						FindLawnMowerInRow(int theRow);
+    int32_t                         GetSpawnTime();
 //  inline bool						SyncState(DataSync& theDataSync) { /* 未发现 */return true; }
 	/*inline*/ void					SaveGame(const std::string& theFileName);
 	bool							LoadGame(const std::string& theFileName);

@@ -291,6 +291,9 @@ ReanimatorTrackInstance::ReanimatorTrackInstance()
 	mShakeOverride = 0.0f;
 	mShakeX = 0.0f;
 	mShakeY = 0.0f;
+    mSkewScale = 0.0f;
+    mTransScaleX = 0.0f;
+    mTransScaleY = 0.0f;
 	mAttachmentID = AttachmentID::ATTACHMENTID_NULL;
 	mRenderGroup = RENDER_GROUP_NORMAL;
 	mIgnoreClipRect = false;
@@ -540,6 +543,48 @@ void BlendTransform(ReanimatorTransform* theResult, const ReanimatorTransform& t
 	theResult->mText = theTransform1.mText;
 	theResult->mImage = theTransform1.mImage;
 }
+void Reanimation::ApplyTrackTransform(int theTrackIndex,ReanimatorTransform& theTransform)
+{
+    ReanimatorTrackInstance* aTrackInstance = &mTrackInstances[theTrackIndex];
+    if(aTrackInstance->mTransScaleY == 0.0f || aTrackInstance->mTransScaleX == 0.0f)return;
+    const float aScaleX = aTrackInstance->mTransScaleX;
+    const float aScaleY = aTrackInstance->mTransScaleY;
+
+    if (FloatApproxEqual(aScaleX, 1.0f) &&FloatApproxEqual(aScaleY, 1.0f))return;
+
+    const int aTransformCount = mDefinition->mTracks.tracks[theTrackIndex].mTransforms.count;
+    if (aTransformCount <= 0)
+    {
+        return;
+    }
+
+    // 以当前动作的第一帧作为位置中心。
+    int aBaseFrame = mFrameStart;
+
+    if (aBaseFrame < 0)
+    {
+        aBaseFrame = 0;
+    }
+    else if (aBaseFrame >= aTransformCount)
+    {
+        aBaseFrame = aTransformCount - 1;
+    }
+
+    int aNextFrame = aBaseFrame + 1;
+
+    if (aNextFrame >= aTransformCount)
+    {
+        aNextFrame = aBaseFrame;
+    }
+    ReanimatorFrameTime aBaseFrameTime
+            {0.0f,aBaseFrame,aNextFrame};
+    ReanimatorTransform aBaseTransform;
+    GetTransformAtTime(theTrackIndex,&aBaseTransform,&aBaseFrameTime);
+
+    theTransform.mTransX =aBaseTransform.mTransX +(theTransform.mTransX -aBaseTransform.mTransX) * aScaleX;
+
+    theTransform.mTransY = aBaseTransform.mTransY +(theTransform.mTransY -aBaseTransform.mTransY) * aScaleY;
+}
 
 // GOTY @Patoke: 0x476580
 void Reanimation::GetCurrentTransform(int theTrackIndex, ReanimatorTransform* theTransformCurrent)
@@ -639,7 +684,13 @@ bool Reanimation::DrawTrack(Graphics* g, int theTrackIndex, int theRenderGroup, 
 	ReanimatorTransform aTransform;
 	ReanimatorTrackInstance* aTrackInstance = &mTrackInstances[theTrackIndex];  // 目标轨道的指针
 	GetCurrentTransform(theTrackIndex, &aTransform);  // 取得当前动画变换
-	int aImageFrame = FloatRoundToInt(aTransform.mFrame);  // 图像在贴图中所处的份数
+    if (aTrackInstance->mSkewScale != 0.0f)
+    {
+        aTransform.mSkewX *= aTrackInstance->mSkewScale;
+        aTransform.mSkewY *= aTrackInstance->mSkewScale;
+    }
+    ApplyTrackTransform(theTrackIndex, aTransform);
+    int aImageFrame = FloatRoundToInt(aTransform.mFrame);  // 图像在贴图中所处的份数
 	if (aImageFrame < 0)  // 不存在图像时，返回
 		return false;
 
@@ -840,6 +891,7 @@ void Reanimation::GetTrackMatrix(int theTrackIndex, SexyTransform2D& theMatrix)
 	ReanimatorTrackInstance* aTrackInstance = &mTrackInstances[theTrackIndex];
 	ReanimatorTransform aTransform;
 	GetCurrentTransform(theTrackIndex, &aTransform);
+    ApplyTrackTransform(theTrackIndex,aTransform);
 	int aImageFrame = FloatRoundToInt(aTransform.mFrame);
 	Image* aImage = aTransform.mImage;
 	ReanimAtlasImage* aAtlasImage = nullptr;

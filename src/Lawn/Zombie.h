@@ -195,6 +195,7 @@ public:
     void                            EatZombie(Zombie* theZombie);
     void                            EatPlant(Plant* thePlant);
     void                            Update();
+    void                            UpdateBlindBox();
     void                            DieNoLoot();
     /*inline*/ void                 DieWithLoot();
     void                            Draw(Graphics* g);

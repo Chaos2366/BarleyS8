@@ -109,6 +109,7 @@ public:
     PlayerInfo();
 
     void                Reset();
+    void                UnlockProgress();
     /*inline*/ void     AddCoins(int theAmount);
     void                SyncSummary(DataSync& theSync);
     void                SyncDetails(DataSync& theSync);

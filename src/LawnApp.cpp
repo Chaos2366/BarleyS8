@@ -159,6 +159,7 @@ LawnApp::LawnApp()
 	mFirstTimeGameSelector = true;
 	mGameMode = GameMode::GAMEMODE_ADVENTURE;
 	mEasyPlantingCheat = false;
+    mRandomPlants = false;
 	mAutoEnable3D = true;
 	Tod_SWTri_AddAllDrawTriFuncs();
 	mLoadingZombiesThreadCompleted = true;
@@ -434,6 +435,7 @@ void LawnApp::PreNewGame(GameMode theGameMode, bool theLookForSavedGame)
 	//}
 
 	mGameMode = theGameMode;
+    mEasyPlantingCheat = IsSurvivalMode();
 	if (theLookForSavedGame && TryLoadGame())
 		return;
 
@@ -2375,6 +2377,10 @@ SeedType LawnApp::GetAwardSeedForLevel(int theLevel)
 
 int LawnApp::GetSeedsAvailable()
 {
+    if (IsSurvivalMode())
+    {
+        return static_cast<int>(SeedType::NUM_SEEDS_IN_CHOOSER);
+    }
 	int aLevel = mPlayerInfo->GetLevel();
 	if (HasFinishedAdventure() || aLevel > 50)
 	{
@@ -2388,6 +2394,15 @@ int LawnApp::GetSeedsAvailable()
 // GOTY @Patoke: 0x456FE0
 bool LawnApp::HasSeedType(SeedType theSeedType)
 {
+    if (IsSurvivalMode())
+    {
+        return
+                static_cast<int>(theSeedType) >=
+                static_cast<int>(SeedType::SEED_PEASHOOTER) &&
+                static_cast<int>(theSeedType) <
+                static_cast<int>(SeedType::NUM_SEEDS_IN_CHOOSER);
+    }
+
 	if (IsTrialStageLocked() && theSeedType >= SeedType::SEED_JALAPENO)
 		return false;
 

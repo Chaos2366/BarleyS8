@@ -175,6 +175,7 @@ void PlayerInfo::LoadDetails()
 		aReader.OpenMemory(aBuffer.GetDataPtr(), aBuffer.GetDataLen(), false);
 		DataSync aSync(aReader);
 		SyncDetails(aSync);
+        UnlockProgress();
 	}
 	catch (DataReaderException&)
 	{
@@ -246,12 +247,33 @@ void PlayerInfo::Reset()
 	mZombatarData.clear();
 	memset(mZombatarTrailingUnknown, 0, sizeof(mZombatarTrailingUnknown));
 	mZombatarCreatedBefore = 0;
+    UnlockProgress();
 }
 
 void PlayerInfo::AddCoins(int theAmount)
 {
 	mCoins += theAmount;
 	mCoins = std::clamp(mCoins, 0, 99999);
+}
+
+void PlayerInfo::UnlockProgress()
+{
+
+    mLevel = 1;
+    mFinishedAdventure = 1;
+    for (int i = 0; i < NUM_CHALLENGE_MODES; i++)
+    {
+        mChallengeRecords[i] = 1;
+    }
+    mHasUnlockedMinigames = 1;
+    mHasUnlockedPuzzleMode = 1;
+    mHasUnlockedSurvivalMode = 1;
+    mHasNewMiniGame = 0;
+    mHasNewScaryPotter = 0;
+    mHasNewIZombie = 0;
+    mHasNewSurvival = 0;
+    mNeedsMessageOnGameSelector = 0;
+    mNeedsMagicTacoReward = 0;
 }
 
 void PlayerInfo::ResetChallengeRecord(GameMode theGameMode)

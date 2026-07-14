@@ -747,6 +747,9 @@ void Coin::Update()
     else if (!mIsBeingCollected)
     {
         UpdateFall();
+        if(mApp->IsSurvivalMode()){
+            Collect();
+        }
     }
     else
     {

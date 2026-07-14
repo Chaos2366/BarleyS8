@@ -16,6 +16,36 @@
 # Mono auto generated files
 mono_crash.*
 
+# Build output
+/build/
+/cmake-build-*/
+/out/
+
+# CLion
+/.idea/
+
+# MSVC output
+*.exe
+*.dll
+*.obj
+*.pdb
+*.ilk
+*.lib
+*.exp
+
+# Runtime-generated data
+/saves/
+/cache64/
+/logs/
+
+# Temporary files
+*.tmp
+*.bak
+*.user
+.DS_Store
+Thumbs.db
+
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
