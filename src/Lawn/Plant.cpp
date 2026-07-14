@@ -182,8 +182,10 @@ void Plant::PlantInitialize(int theGridX, int theGridY, SeedType theSeedType, Se
         mBlinkCountdown = 400 + Sexy::Rand(400);
     }
 
-    if (IsNocturnal(mSeedType) && mBoard && !mBoard->StageIsNight())
+    if (IsNocturnal(mSeedType) &&mBoard &&!mBoard->StageIsNight() &&!mApp->IsSurvivalMode())
+    {
         SetSleeping(true);
+    }
 
     if (mLaunchRate > 0)
     {
@@ -788,7 +790,16 @@ bool Plant::FindTargetAndFire(int theRow, PlantWeapon thePlantWeapon)
         {
         case SeedType::SEED_FUMESHROOM:     mShootingCounter = 50;  break;
         case SeedType::SEED_PUFFSHROOM:     mShootingCounter = 29;  break;
-        case SeedType::SEED_SCAREDYSHROOM:  mShootingCounter = 25;  break;
+        case SeedType::SEED_SCAREDYSHROOM:
+            if(mLaunchRate >= 26){
+                mLaunchRate -= 2;
+            }else{
+                mLaunchCounter = 26;
+                mShootingCounter = 5;
+                break;
+            }
+            mShootingCounter = 25;
+            break;
         case SeedType::SEED_CABBAGEPULT:    mShootingCounter = 32;  break;
         case SeedType::SEED_MELONPULT:
         case SeedType::SEED_WINTERMELON:    mShootingCounter = 36;  break;
@@ -1312,7 +1323,6 @@ void Plant::UpdateScaredyShroom()
 {
     if (mShootingCounter > 0)
         return;
-
     bool aHasZombieNearby = false;
 
     Zombie* aZombie = nullptr;

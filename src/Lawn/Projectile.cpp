@@ -804,7 +804,8 @@ void Projectile::PlayImpactSound(Zombie* theZombie)
 			mApp->PlayFoley(FoleyType::FOLEY_SHIELD_HIT);
 			aPlaySplatSound = false;
 		}
-		else if (theZombie->mHelmType == HELMTYPE_TRAFFIC_CONE || theZombie->mHelmType == HELMTYPE_DIGGER || theZombie->mHelmType == HELMTYPE_FOOTBALL)
+		else if (theZombie->mHelmType == HELMTYPE_TRAFFIC_CONE || theZombie->mHelmType == HELMTYPE_DIGGER || theZombie->mHelmType == HELMTYPE_FOOTBALL
+        || theZombie->mHelmType == HELMTYPE_BLIND_BOX)
 		{
 			mApp->PlayFoley(FoleyType::FOLEY_PLASTIC_HIT);
 		}

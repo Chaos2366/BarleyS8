@@ -31,6 +31,7 @@
 #include "../Sexy.TodLib/FilterEffect.h"
 #include "misc/SexyMatrix.h"
 
+
 SeedPacket::SeedPacket()
 {
 	mSlotMachiningPosition = 0.0f;
@@ -1189,3 +1190,4 @@ void SeedBank::RefreshAllPackets()
 		}
 	}
 }
+

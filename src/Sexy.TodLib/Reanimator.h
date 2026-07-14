@@ -186,8 +186,11 @@ public:
     int32_t                         mBlendTime;
     ReanimatorTransform             mBlendTransform;
     float                           mShakeOverride;
+    float                           mTransScaleX;
+    float                           mTransScaleY;
     float                           mShakeX;
     float                           mShakeY;
+    float                           mSkewScale;
     AttachmentID                    mAttachmentID;
     Image*                          mImageOverride;
     int32_t                         mRenderGroup;
@@ -239,6 +242,7 @@ public:
     void                            DrawRenderGroup(Graphics* g, int theRenderGroup);
     bool                            DrawTrack(Graphics* g, int theTrackIndex, int theRenderGroup, TodTriangleGroup* theTriangleGroup);
     void                            GetCurrentTransform(int theTrackIndex, ReanimatorTransform* theTransformCurrent);
+    void                            ApplyTrackTransform(int theTrackIndex, ReanimatorTransform& theTransform);
     void                            GetTransformAtTime(int theTrackIndex, ReanimatorTransform* theTransform, ReanimatorFrameTime* theFrameTime);
     void                            GetFrameTime(ReanimatorFrameTime* theFrameTime);
     int                             FindTrackIndex(const char* theTrackName);

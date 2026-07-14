@@ -98,6 +98,7 @@ public:
 	int								mMaxPlays;
 	int								mMaxTime;
 	bool							mEasyPlantingCheat;
+    bool                            mRandomPlants;
 	PoolEffect*						mPoolEffect;
 	ZenGarden*						mZenGarden;
 	EffectSystem*					mEffectSystem;
